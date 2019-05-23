@@ -25,8 +25,8 @@
     path: "{{ item }}"
     state: absent
   loop:
-    - "{{ postgresql_data_dir }}/main"
-    - "{{ postgresql_config_path }}/main"
+    - "{{ postgresql_default_main_cluster_path }}"
+    - "{{ postgresql_default_main_cluster_configpath }}"
   when:
     - postgresql_cluster_name != 'main'
     - package_installed.changed
