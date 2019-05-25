@@ -66,12 +66,13 @@
     postgresql_bin_path: "{{ __postgresql_bin_path }}"
   when: postgresql_bin_path is not defined
 
-- name: Define postgresql_config_path for debian based system.
+- name: Define postgresql_config_path for RedHat  based system.
   set_fact:
     postgresql_config_path: "{{ postgresql_pgdata | default(__postgresql_config_path) }}"
   when:
     - postgresql_config_path is not defined
     - ansible_os_family == 'RedHat'
+
 - name: Define postgresql_config_path for debian based system.
   set_fact:
     postgresql_config_path: "{{ __postgresql_config_path }}"
