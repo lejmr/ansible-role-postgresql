@@ -49,6 +49,7 @@
 - name: Define PGDATA.
   set_fact:
     postgresql_pgdata: "{{ postgresql_data_dir }}/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+  when: postgresql_pgdata is not defined
 
 # Asserts on pgdata path
 - name: Main cluster name can only be located in default path
@@ -69,3 +70,8 @@
   set_fact:
     postgresql_config_path: "{{ __postgresql_config_path }}"
   when: postgresql_config_path is not defined
+
+- name: Define postgresql_initdb_options
+  set_fact:
+    postgresql_initdb_options: []
+  when: postgresql_initdb_options is not defined
