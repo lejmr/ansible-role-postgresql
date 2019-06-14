@@ -121,7 +121,7 @@ def update_value(line, value):
 
     # Determine if value has changed
     if is_number(old_value) and is_number(value):
-        change = True if abs(float(old_value) - float(value)) > 0.001 else False
+        changed = True if abs(float(old_value) - float(value)) > 0.001 else False
     else:
         changed = str(old_value if old_value[0] != "'" else old_value[1:-1]).strip() != str(value).strip()
 
