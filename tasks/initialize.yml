@@ -31,6 +31,7 @@
   become: true
   become_user: "{{ postgresql_user }}"
   when:
+    - postgresql_initialize_database
     - not pgdata_dir_version.stat.exists
     - ansible_os_family == 'Debian'
 
@@ -42,6 +43,7 @@
   vars:
     ansible_ssh_pipelining: true
   when:
+    - postgresql_initialize_database
     - not pgdata_dir_version.stat.exists
     - ansible_os_family == 'RedHat'
 
@@ -53,5 +55,6 @@
     state: present
   notify: restart postgresql
   when:
+    - postgresql_initialize_database
     - postgresql_port != 5432
     - ansible_os_family == 'Debian' or (ansible_os_family == 'RedHat' and postgresql_version|float > 9.4)
