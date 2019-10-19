@@ -4,7 +4,7 @@
   become: true
 
   vars:
-    postgresql_pgdg: True
+    postgresql_pgdg: true
     postgresql_version: 10
     postgresql_databases:
       - name: example
