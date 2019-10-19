@@ -7,24 +7,22 @@ env:
     - ROLE_NAME: postgresql
   matrix:
     - MOLECULE_DISTRO: centos7
-    - MOLECULE_DISTRO: centos7
       MOLECULE_PLAYBOOK: playbook-pgdg10.yml
     - MOLECULE_DISTRO: ubuntu1804
     - MOLECULE_DISTRO: ubuntu1804
       MOLECULE_PLAYBOOK: playbook-pgdg10.yml
     - MOLECULE_DISTRO: ubuntu1604
+    - MOLECULE_DISTRO: debian10
+    - MOLECULE_DISTRO: debian9
+    - MOLECULE_DISTRO: ubuntu1604
     - MOLECULE_DISTRO: ubuntu1604
       MOLECULE_PLAYBOOK: playbook-pgdg10.yml
     - MOLECULE_DISTRO: debian9
-    - MOLECULE_DISTRO: debian9
-      MOLECULE_PLAYBOOK: playbook-pgdg10.yml
-    - MOLECULE_DISTRO: debian8
-    - MOLECULE_DISTRO: debian8
       MOLECULE_PLAYBOOK: playbook-pgdg10.yml
 
 install:
   # Install test dependencies.
-  - pip install molecule docker
+  - pip install molecule==2.19 docker ansible==2.7.10
 
 before_script:
   # Use actual Ansible Galaxy role name for the project directory.

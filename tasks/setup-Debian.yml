@@ -28,8 +28,8 @@
     path: "{{ item }}"
     state: absent
   loop:
-    - "{{ __postgresql_data_dir }}/{{ postgresql_version }}/main"
-    - "{{ postgresql_config_path.split('/')[:-1]|join('/') }}/main"
+    - "{{ postgresql_default_main_cluster_path }}"
+    - "{{ postgresql_default_main_cluster_configpath }}"
   when:
     - postgresql_cluster_name != 'main'
     - package_installed.changed
