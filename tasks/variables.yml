@@ -55,6 +55,7 @@
 - name: Define PGDATA.
   set_fact:
     postgresql_pgdata: "{{ postgresql_data_dir }}/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+  when: postgresql_pgdata is not defined
 
 # Asserts on pgdata path
 - name: Main cluster name can only be located in default path
@@ -71,7 +72,35 @@
     postgresql_bin_path: "{{ __postgresql_bin_path }}"
   when: postgresql_bin_path is not defined
 
-- name: Define postgresql_config_path.
+- name: Define postgresql_config_path for RedHat based system.
+  set_fact:
+    postgresql_config_path: "{{ postgresql_pgdata | default(__postgresql_config_path) }}"
+  when:
+    - postgresql_config_path is not defined
+    - ansible_os_family == 'RedHat'
+
+- name: Define postgresql_config_path for Debian based system.
   set_fact:
     postgresql_config_path: "{{ __postgresql_config_path }}"
-  when: postgresql_config_path is not defined
+  when:
+    - postgresql_config_path is not defined
+    - ansible_os_family == 'Debian'
+
+- name: Define postgresql_initdb_options
+  set_fact:
+    postgresql_initdb_options: []
+  when: postgresql_initdb_options is not defined
+
+- name: Define postgresql_default_main_cluster_path for Debian based system
+  set_fact:
+    postgresql_default_main_cluster_path: "{{ __postgresql_default_main_cluster_path }}"
+  when:
+    - postgresql_default_main_cluster_path is not defined
+    - ansible_os_family == 'Debian'
+
+- name: Define postgresql_default_main_cluster_path for Debian based system
+  set_fact:
+    postgresql_default_main_cluster_configpath: "{{ __postgresql_default_main_cluster_configpath }}"
+  when:
+    - postgresql_default_main_cluster_configpath is not defined
+    - ansible_os_family == 'Debian'

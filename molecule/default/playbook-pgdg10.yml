@@ -4,6 +4,7 @@
   become: true
 
   vars:
+    postgresql_pgdg: true
     postgresql_version: 10
     postgresql_databases:
       - name: example
@@ -19,7 +20,7 @@
       set_fact:
         postgresql_hba_entries: []
         postgresql_global_config_options:
-          - option: unix_socket_directory
+          - option: unix_socket_directories
             value: '{{ postgresql_unix_socket_directories[0] }}'
       when:
         - ansible_os_family == 'RedHat'

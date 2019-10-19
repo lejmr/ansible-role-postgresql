@@ -19,9 +19,15 @@
     path: "{{ postgresql_pgdata }}/PG_VERSION"
   register: pgdata_dir_version
 
+- name: Extra initdb options
+  debug:
+    msg: "{{ postgresql_initdb_options|join(' ') }}"
+    verbosity: 1
+
 - name: Ensure PostgreSQL database is initialized.
   command: "pg_createcluster -d {{ postgresql_pgdata }} -p {{ postgresql_port }} \
-            {{ postgresql_version }} {{ postgresql_cluster_name }}"
+            {{ postgresql_version }} {{ postgresql_cluster_name }} \
+            {{ '-- '+postgresql_initdb_options|join(' ') if postgresql_initdb_options|length > 0 else '' }}"
   become: true
   become_user: "{{ postgresql_user }}"
   when:
@@ -29,7 +35,7 @@
     - ansible_os_family == 'Debian'
 
 - name: Ensure PostgreSQL database is initialized.
-  command: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_pgdata }}"
+  command: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_pgdata }} {{ postgresql_initdb_options|join(' ') }}"
   become: true
   become_user: "{{ postgresql_user }}"
   # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
