@@ -104,3 +104,16 @@
   when:
     - postgresql_default_main_cluster_configpath is not defined
     - ansible_os_family == 'Debian'
+
+- name: Set postgresql slave wal dir
+  set_fact:
+    postgresql_slave_wal_dir: "{{ postgresql_data_dir }}/standby_wal/"
+  when:
+    - postgresql_slave_wal_dir is not defined
+
+- name: Set postgresql trigger promote slave file
+  set_fact:
+    postgresql_slave_trigger_file: "{{ postgresql_config_path }}/pg_trigger"
+  when:
+    - postgresql_slave_host is defined
+    - postgresql_slave_trigger_file is not defined

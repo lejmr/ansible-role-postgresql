@@ -1,0 +1,81 @@
+---
+- name: Create required directories on slave
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ postgresql_slave_user }}"
+    group: "{{ postgresql_slave_user }}"
+  delegate_to: "{{ postgresql_slave_host }}"
+  with_items:
+    - "{{ postgresql_slave_wal_dir }}"
+    - "{{ getent_passwd[postgresql_slave_user][4] }}/.ssh"
+
+- name: Transfer public key to slave
+  lineinfile:
+    dest: "{{ getent_passwd[postgresql_slave_user][4] }}/.ssh/authorized_keys"
+    line: "{{ lookup('file', '/tmp/public_key_'+inventory_hostname) }}"
+    owner: "{{ postgresql_slave_user }}"
+    group: "{{ postgresql_slave_user }}"
+    create: true
+  delegate_to: "{{ postgresql_slave_host }}"
+
+- name: Stop postgres on slave
+  service:
+    name: "{{ postgresql_daemon }}"
+    state: stopped
+  delegate_to: "{{ postgresql_slave_host }}"
+  tags: [never, postgresql_slave_sync]
+
+- name: Delete pgdata dir on slave (for sync)
+  file:
+    path: "{{ postgresql_pgdata }}"
+    state: absent
+  delegate_to: "{{ postgresql_slave_host }}"
+  tags: [never, postgresql_slave_sync]
+
+- name: Get data from master
+  environment:
+    PGPASSWORD: "{{ postgresql_replication_password }}"
+  shell: "pg_basebackup -h {{ postgresql_master }} -D {{ postgresql_pgdata }} -P -U replication  -X s"
+  become: true
+  become_user: "{{ postgresql_slave_user }}"
+  delegate_to: "{{ postgresql_slave_host }}"
+  tags: [never, postgresql_slave_sync]
+
+- name: Create standby.signal if it doesn't exist (required by postgres 12)
+  file:
+    path: "{{ getent_passwd[postgresql_user][4] }}/standby.signal"
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+    owner: "{{ postgresql_slave_user }}"
+    group: "{{ postgresql_slave_user }}"
+  when: postgresql_version == 12
+  delegate_to: "{{ postgresql_slave_host }}"
+
+- name: define recovery path
+  set_fact:
+    postgresql_recovery_path: "{{ postgresql_pgdata }}"
+  delegate_to: "{{ postgresql_slave_host }}"
+
+- name: redfine recovery path for postgres 12
+  set_fact:
+    postgresql_recovery_path: "{{ postgresql_config_path }}/conf.d/"
+  when: postgresql_version == 12
+  delegate_to: "{{ postgresql_slave_host }}"
+
+- name: Configure slave server
+  template:
+    src: recovery.conf.j2
+    dest: "{{ postgresql_recovery_path }}/recovery.conf"
+    backup: true
+    owner: "{{ postgresql_slave_user }}"
+    group: "{{ postgresql_slave_user }}"
+  delegate_to: "{{ postgresql_slave_host }}"
+
+- name: Start postgres on slave
+  service:
+    name: "{{ postgresql_daemon }}"
+    state: started
+  delegate_to: "{{ postgresql_slave_host }}"
+  tags: [never, postgresql_slave_sync]

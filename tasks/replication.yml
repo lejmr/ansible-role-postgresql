@@ -1,0 +1,83 @@
+---
+- name: Define ansible host to current host
+  set_fact:
+    postgresql_master: "{{ ansible_host }}"
+
+- name: Set replication option into master
+  template:
+    src: replication_master.conf.j2
+    dest: "{{ postgresql_config_path }}/replication_master.conf"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_user }}"
+
+- name: Add include into main config file
+  lineinfile:
+    insertafter: EOF
+    state: present
+    line: include 'replication_master.conf'
+    path: "{{ postgresql_config_path }}/postgresql.conf"
+
+- name: restart postgres on master
+  service:
+    name: "{{ postgresql_daemon }}"
+    state: restarted
+
+# Create and share key between master and slave
+# master will use a private key to rsync data to the slave
+- name: Get postgres user data on master node
+  getent:
+    database: passwd
+    key: "{{ postgresql_user }}"
+    split: ':'
+
+- name: Create .ssh directory
+  file:
+    path: "{{ getent_passwd[postgresql_user][4] +'/.ssh' }}"
+    state: directory
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_user }}"
+
+- name: Check SSH key
+  stat:
+    path: "{{ getent_passwd[postgresql_user][4] }}/.ssh/id_rsa"
+  register: stat_sshkey_res
+
+- name: Generate SSH key
+  shell: "ssh-keygen -b 2048 -t rsa -f {{ getent_passwd[postgresql_user][4] }}/.ssh/id_rsa -q -N ''"
+  when: not stat_sshkey_res.stat.exists
+
+- name: Change permission on .ssh directory
+  file:
+    path: "{{ getent_passwd[postgresql_user][4] }}/.ssh/"
+    recurse: true
+    mode: "700"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_user }}"
+
+- name: Create known_hosts if it doesn't exist
+  file:
+    path: "{{ getent_passwd[postgresql_user][4] }}/.ssh/known_hosts"
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_user }}"
+
+- name: Check if we already know the slave (ssh known_hosts)
+  lineinfile:
+    dest: "{{ getent_passwd[postgresql_user][4] }}/.ssh/known_hosts"
+    line: "{{ postgresql_slave_host }}"
+  check_mode: true
+  register: known_hosts
+
+- name: Ensure master knows about slave SSH key
+  shell: "ssh-keyscan -trsa -p22 {{ postgresql_slave_host }}>>{{ getent_passwd[postgresql_user][4] }}/.ssh/known_hosts"
+  become: true
+  become_user: "{{ postgresql_user }}"
+  when: known_hosts is changed
+
+- name: Fetch public key from master node
+  fetch:
+    src: "{{ getent_passwd[postgresql_user][4] }}/.ssh/id_rsa.pub"
+    dest: "/tmp/public_key_{{ inventory_hostname }}"
+    flat: true

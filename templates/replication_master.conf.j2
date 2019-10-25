@@ -1,0 +1,5 @@
+wal_level = hot_standby
+max_wal_senders = {{ postgresql_max_wal_senders| default(5) }}
+wal_keep_segments = {{ postgresql_wal_keep_segments | default(32) }}
+archive_mode = on
+archive_command = 'rsync -av %p {{postgresql_slave_user }}@{{ postgresql_slave_host }}:{{ postgresql_slave_wal_dir | regex_replace('\\/$', '')}}/'

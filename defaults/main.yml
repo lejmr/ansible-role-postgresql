@@ -27,6 +27,8 @@ postgresql_python_library: python-psycopg2
 postgresql_user: postgres
 postgresql_group: postgres
 
+postgresql_slave_user: postgres
+
 postgresql_unix_socket_directories:
   - /var/run/postgresql
 
