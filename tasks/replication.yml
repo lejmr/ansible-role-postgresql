@@ -2,6 +2,7 @@
 - name: Define ansible host to current host
   set_fact:
     postgresql_master: "{{ ansible_host }}"
+  tags: [postgresql_slave_sync]
 
 - name: Set replication option into master
   template:

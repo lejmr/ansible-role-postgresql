@@ -44,7 +44,7 @@
 
 - name: Create standby.signal if it doesn't exist (required by postgres 12)
   file:
-    path: "{{ getent_passwd[postgresql_user][4] }}/standby.signal"
+    path: "{{ postgresql_pgdata }}/standby.signal"
     state: touch
     modification_time: preserve
     access_time: preserve
@@ -52,17 +52,21 @@
     group: "{{ postgresql_slave_user }}"
   when: postgresql_version == 12
   delegate_to: "{{ postgresql_slave_host }}"
+  tags: [postgresql_slave_sync]
 
 - name: define recovery path
   set_fact:
     postgresql_recovery_path: "{{ postgresql_pgdata }}"
   delegate_to: "{{ postgresql_slave_host }}"
+  tags: [postgresql_slave_sync]
 
 - name: redfine recovery path for postgres 12
   set_fact:
     postgresql_recovery_path: "{{ postgresql_config_path }}/conf.d/"
   when: postgresql_version == 12
   delegate_to: "{{ postgresql_slave_host }}"
+  tags: [postgresql_slave_sync]
+
 
 - name: Configure slave server
   template:
