@@ -117,3 +117,10 @@
   when:
     - postgresql_slave_host is defined
     - postgresql_slave_trigger_file is not defined
+
+- name: Define if this instance is a slave instance
+  set_fact:
+    postgresql_is_slave: true
+  when:
+    - postgresql_slave_host is defined
+    - (postgresql_slave_host == inventory_hostname or postgresql_slave_host == ansible_hostname )
