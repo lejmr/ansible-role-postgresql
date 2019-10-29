@@ -17,6 +17,7 @@
     mode: 0600
   notify: restart postgresql
   when: postgresql_hba_entries | length > 0
+  tags: [pg_hba]
 
 - name: Ensure PostgreSQL unix socket dirs exist.
   file:
