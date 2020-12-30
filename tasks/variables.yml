@@ -82,3 +82,8 @@
     postgresql_unix_socket_directories_mode: >-
       {{ __postgresql_unix_socket_directories_mode | default('02775') }}
   when: postgresql_unix_socket_directories_mode is not defined
+
+- name: Define postgresql_initdb_options
+  set_fact:
+    postgresql_initdb_options: []
+  when: postgresql_initdb_options is not defined
